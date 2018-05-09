@@ -35,15 +35,36 @@ def read_behavior(data):
     #------------collect memory----end-----
     return behavior
 
-
+#----------------------------------------------------------------------
+def read_signatures(data):
+    """read signatures which has callbacks~"""
+    signatures= data['signatures']
+#------------collect memory----start---
+    del data
+    gc.collect()
+#------------collect memory----end-----
+    signatures_str=json.dumps(signatures)
+    with open('signatures.txt','a+') as ff:
+        ff.truncate()
+        ff.write(signatures_str)
+        ff.close()        
+    #------------collect memory----start---
+    del signatures_str
+    gc.collect()
+    #------------collect memory----end-----
+    return signatures    
+    
 
 
 
 def read_apistat(behavior,pid):
     
-    apistat=behavior['apistats'][str(pid)]
+    apistat=behavior['apistats']
     api=[]
-    
+    #------------collect memory----start---
+    del behavior
+    gc.collect()
+    #------------collect memory----end-----    
     #apistat_str=json.dumps(apistat)   
     with open('apistat.json','a+') as ff:
         ff.truncate()
@@ -54,18 +75,31 @@ def read_apistat(behavior,pid):
         ff.truncate()
         
         for k in apistat.keys():
-            api.append(k)        
-            ff.writelines(k)
+            api.append(json.dumps(k))        
+            ff.writelines(json.dumps(k))
             ff.write('\n')
         ff.close()
     return api
 
-
-
+#----------------------------------------------------------------------
+def read_calls(data):
+    """read the calls of process"""
+    calls=[]
+    for process in data.get('behavior',{}).get("processes",[]):
+        calls.append(process["calls"])
+        process["calls"]=[]
+    with open('./calls.json','a+') as f:
+        f.truncate()
+        f.write(json.dumps(calls))
+        f.close()
+    del calls
+    gc.collect()
 if __name__=='__main__':
     
     json_path='./report.json'
     data,pid=read_json(json_path)
-    behavior=read_behavior(data)
-    api=read_apistat(behavior,pid)
-    print api
+    #behavior=read_behavior(data)
+    #api=read_apistat(behavior,pid)
+    #print api
+    #signature=read_signatures(data)
+    read_calls(data)

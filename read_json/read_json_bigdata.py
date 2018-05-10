@@ -3,8 +3,8 @@ import json
 import gc
 
 
-def get_pid(data):
-    pid=data['behavior']['generic'][0]['pid']
+def get_pid(result):
+    pid=result['behavior']['generic'][0]['pid']
     # type(pid)
     return pid
 
@@ -12,20 +12,18 @@ def get_pid(data):
 def read_json(json_path):
     """"""
     with open(json_path,'r') as f:
-        data=json.load(f)
+        result=json.load(f)
         f.close()
-    pid=get_pid(data)
-    return data,pid
+    #pid=get_pid(result)
+    pid=1
+    return result,pid
 
-def read_behavior(data):
+def read_behavior(result):
     
-    behavior= data['behavior']
-#------------collect memory----start---
-    del data
-    gc.collect()
-#------------collect memory----end-----
+    behavior= result.get('behavior')
+
     behavior_str=json.dumps(behavior)
-    with open('behavior.txt','a+') as ff:
+    with open('behavior.json','a+') as ff:
         ff.truncate()
         ff.write(behavior_str)
         ff.close()        
@@ -36,15 +34,11 @@ def read_behavior(data):
     return behavior
 
 #----------------------------------------------------------------------
-def read_signatures(data):
+def read_signatures(result):
     """read signatures which has callbacks~"""
-    signatures= data['signatures']
-#------------collect memory----start---
-    del data
-    gc.collect()
-#------------collect memory----end-----
+    signatures= result['signatures']
     signatures_str=json.dumps(signatures)
-    with open('signatures.txt','a+') as ff:
+    with open('signatures.json','a+') as ff:
         ff.truncate()
         ff.write(signatures_str)
         ff.close()        
@@ -57,21 +51,19 @@ def read_signatures(data):
 
 
 
-def read_apistat(behavior,pid):
+def read_apistat(result):
     
-    apistat=behavior['apistats']
-    api=[]
-    #------------collect memory----start---
-    del behavior
-    gc.collect()
-    #------------collect memory----end-----    
+    apistat=result.get('behavior',{}).get('apistats',[])
+    
+       
     #apistat_str=json.dumps(apistat)   
     with open('apistat.json','a+') as ff:
         ff.truncate()
+        
         ff.write(json.dumps(apistat))
         ff.close()
-        
-    with open('api.txt','a+') as ff:
+    api=[]
+    with open('api.json','a+') as ff:
         ff.truncate()
         
         for k in apistat.keys():
@@ -82,10 +74,10 @@ def read_apistat(behavior,pid):
     return api
 
 #----------------------------------------------------------------------
-def read_calls(data):
+def read_calls(result):
     """read the calls of process"""
     calls=[]
-    for process in data.get('behavior',{}).get("processes",[]):
+    for process in result.get('behavior',{}).get("processes",[]):
         calls.append(process["calls"])
         process["calls"]=[]
     with open('./calls.json','a+') as f:
@@ -93,13 +85,26 @@ def read_calls(data):
         f.write(json.dumps(calls))
         f.close()
     del calls
-    gc.collect()
+    
+#----------------------------------------------------------------------
+def read_summary(result):
+    """"""
+    
+    summary=result['behavior']['summary']
+    for key,value in summary.items():
+        with open('./'+key+'.json','a+') as f:
+            f.truncate()
+            f.write(json.dumps(value))
+            f.close()
+    
+
 if __name__=='__main__':
     
     json_path='./report.json'
-    data,pid=read_json(json_path)
-    #behavior=read_behavior(data)
-    #api=read_apistat(behavior,pid)
+    result,pid=read_json(json_path)
+    #behavior=read_behavior(result)
+    api=read_apistat(result)
     #print api
-    #signature=read_signatures(data)
-    read_calls(data)
+    signature=read_signatures(result)
+    read_calls(result)
+    read_summary(result)

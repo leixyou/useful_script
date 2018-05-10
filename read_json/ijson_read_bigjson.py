@@ -1,14 +1,26 @@
 #!/usr/bin/env python
 import ijson
-def read_alert():
+import json
+def read_apistats(report_filepath):
     
-    filepath="./alert.json"
     with open(filepath,'r') as f:
-        objects=ijson.items(f,'')
-        for x in list(objects):
-            print x 
-            
+        apistats=json.dumps(ijson.items(f,'behavior.apistats'))
+        #print apistats
         f.close()
-        
+    return apistats
+
+def write_file(filepath,data):
+    f=open(filepath,'a+')
+    f.truncate()
+    if type(data) is not str:
+        for x in data:
+            f.write(x)
+            f.write('\n')
+    else:
+        f.write(data)
+    f.close()
+    return 
 if __name__=='__main__':
-    read_alert()
+    filepath="./report.json"
+    apistats=read_apistats(report_filepath)
+    write_file('./result.json',apistats)

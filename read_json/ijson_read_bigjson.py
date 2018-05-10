@@ -3,7 +3,7 @@ import ijson
 import json
 def read_apistats(report_filepath):
     
-    with open(filepath,'r') as f:
+    with open(report_filepath,'r') as f:
         apistats=json.dumps(ijson.items(f,'behavior.apistats'))
         #print apistats
         f.close()
@@ -21,6 +21,6 @@ def write_file(filepath,data):
     f.close()
     return 
 if __name__=='__main__':
-    filepath="./report.json"
+    report_filepath="./report.json"
     apistats=read_apistats(report_filepath)
     write_file('./result.json',apistats)
